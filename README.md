@@ -9,8 +9,12 @@
 
 需要：Windows、Python 3.11、VS Code（Jupyter 擴充套件）、Microsoft Edge（報告截圖用，可省略）。
 
+程式碼在 GitHub，原始資料和輸出在 Google Drive 的 `stock_drive_YYYYMMDD.zip`（不進 git，見 `.gitignore`）。
+
 ```powershell
-# 1. 把專案資料夾放到新電腦（例如 D:\stock），進到資料夾
+# 1. 抓程式碼，再把 Google Drive 的 zip 解壓縮到同一個資料夾
+#    （zip 裡是 data\、marks\、reports\、analysis\ 的輸出，會直接合併進去）
+git clone https://github.com/dog14230pp/stock-find_max_high.git D:\stock
 cd D:\stock
 
 # 2. 重建 Python 環境（.venv 不要從舊電腦複製，要重建）
