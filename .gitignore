@@ -1,0 +1,17 @@
+# 環境、暫存（每台電腦各自產生）
+.venv/
+.tmp/
+__pycache__/
+*.pyc
+.claude/
+
+# 打包給 Google Drive 的壓縮檔
+_transfer/
+
+# 大檔 / 可重新產生的輸出：放 Google Drive，不進 git
+data/
+marks/
+reports/
+analysis/**/*.csv
+analysis/**/*.png
+analysis/**/*.html
