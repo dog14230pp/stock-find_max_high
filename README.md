@@ -31,6 +31,26 @@ python lib/backtest_report.py marks/type1
 
 notebook：用 VS Code 打開 `notebooks/讀取20261017高點研究.ipynb`，kernel 選 `.venv`，從第一個 cell 開始跑。
 
+### 兩台電腦之間來回搬
+
+**離開這台電腦前**
+```powershell
+git add -A; git commit -m "說明"; git push      # 程式碼 → GitHub
+python tools/pack_drive.py                      # 資料與輸出 → _transfer\stock_drive_YYYYMMDD.zip，上傳 Google Drive
+```
+
+**到另一台電腦**
+```powershell
+git pull                                        # 拿最新程式碼
+# 下載最新的 zip，解壓縮到專案資料夾，遇到同名檔案選「取代」
+pip install -r requirements.txt                 # 套件有變才需要
+```
+
+注意：
+- 開工前先 `git pull`，收工後 `git push`。兩台都改了同一個檔案又沒同步，會產生衝突。
+- 解壓縮只會新增或覆蓋，不會刪除。另一台電腦刪掉的檔案，這台還會留著。
+- 如果只改了程式、沒動資料，可以不用 zip，直接重跑程式產生輸出。
+
 ### Claude Code 設定（在每台電腦的使用者資料夾，不會跟著專案走）
 舊電腦的這兩個檔要另外複製到新電腦的 `C:\Users\<帳號>\.claude\`：
 
