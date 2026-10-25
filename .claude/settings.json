@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(rm *)",
+      "Bash(rmdir *)",
+      "Bash(unlink *)",
+      "Bash(shred *)",
+      "Bash(find * -delete*)",
+      "Bash(git clean *)",
+      "Bash(git rm *)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(rm *)",
+      "PowerShell(del *)",
+      "PowerShell(erase *)",
+      "PowerShell(rmdir *)",
+      "PowerShell(rd *)",
+      "PowerShell(ri *)",
+      "PowerShell(Clear-Content *)",
+      "PowerShell(cmd /c del *)",
+      "PowerShell(cmd /c rd *)",
+      "PowerShell(git clean *)",
+      "PowerShell(git rm *)"
+    ]
+  }
+}

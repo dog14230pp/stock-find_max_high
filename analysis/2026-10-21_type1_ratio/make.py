@@ -20,7 +20,7 @@ frame_max.csv  每列 = 一個 frame 的最高點（最高價第一次出現的�
     max_tick_type, max_tick_volume,
     sec_volume, sec_type1_ratio（最高點那一秒）, min_volume, min_type1_ratio（最高點那一分鐘）
 
-執行（在 D:\\stock）：python analysis/2026-10-21_type1_ratio/make.py
+執行（在專案根目錄）：python analysis/2026-10-21_type1_ratio/make.py
 """
 import sys
 from pathlib import Path

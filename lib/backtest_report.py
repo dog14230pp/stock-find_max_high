@@ -19,7 +19,8 @@ CSV 格式
 ----
     python lib/backtest_report.py marks/type1             報告輸出到 reports/type1/index.html
     python lib/backtest_report.py marks/type1 --name v2   報告輸出到 reports/v2/index.html
-    （相對路徑都以專案根目錄 D:\stock 為準，從哪裡執行都可以）
+    python lib/backtest_report.py marks/type1 --all       評估全部 290 個 frame（預設只評估 frame_filter.keep_frames() 的 242 個）
+    （相對路徑都以專案根目錄為準，從哪裡執行都可以）
     寫 CSV 可以用 save_marks(times, df_idx, 'marks/type1')
 """
 from __future__ import annotations
@@ -110,10 +111,11 @@ def plot_frame(bars, marks, max_time, max_price, title, path):
     plt.close(fig)
 
 
-def evaluate(marks_dir, df_list, key_list, out=None):
-    """回傳每個 frame 一列的 DataFrame；out 有給就同時畫圖到 out/plots/。"""
+def evaluate(marks_dir, df_list, key_list, out=None, frames=None):
+    """回傳每個 frame 一列的 DataFrame；out 有給就同時畫圖到 out/plots/。frames = 要評估的 df_idx（預設全部）。"""
     rows = []
-    for i, df in enumerate(df_list):
+    for i in (range(len(df_list)) if frames is None else frames):
+        df = df_list[i]
         bars, max_time, max_price = bars_of(df)
         marks = read_marks(marks_dir, i)
         minutes = marks.floor(FREQ)
@@ -216,8 +218,10 @@ def build_html(name, marks_dir, res, plots):
             f'<body>{body}<script>{JS}</script></body></html>')
 
 
-def run_report(marks_dir, name=None, df_list=None, key_list=None, plots=True, open_browser=True):
-    """讀 marks_dir 的 CSV，輸出 reports/<name>/index.html，回傳 (報告路徑, 每個 frame 的結果)。"""
+def run_report(marks_dir, name=None, df_list=None, key_list=None, plots=True, open_browser=True,
+               frames=None):
+    """讀 marks_dir 的 CSV，輸出 reports/<name>/index.html，回傳 (報告路徑, 每個 frame 的結果)。
+    frames = 要評估的 df_idx（None = 全部）。"""
     t0 = time.time()
     marks_dir = Path(marks_dir)
     if not marks_dir.is_absolute():
@@ -228,7 +232,7 @@ def run_report(marks_dir, name=None, df_list=None, key_list=None, plots=True, op
     out = REPORT_DIR / name
     out.mkdir(parents=True, exist_ok=True)
 
-    res = evaluate(marks_dir, df_list, key_list, out if plots else None)
+    res = evaluate(marks_dir, df_list, key_list, out if plots else None, frames)
     csv = res.assign(marks=res['marks'].map(lambda m: ' '.join(f'{x:%Y-%m-%d %H:%M:%S}' for x in m)))
     csv.drop(columns='marks_no_tick').to_csv(out / 'result.csv', index=False, encoding='utf-8-sig')
     report = out / 'index.html'
@@ -246,8 +250,15 @@ def main():
     ap.add_argument('--name', help='報告名稱（預設 = 資料夾名稱）')
     ap.add_argument('--no-plots', action='store_true', help='不畫圖，只出表格')
     ap.add_argument('--no-open', action='store_true', help='跑完不自動打開瀏覽器')
+    ap.add_argument('--all', action='store_true', help='評估全部 290 個 frame（預設只評估 keep_frames() 的 242 個）')
     a = ap.parse_args()
-    run_report(a.marks_dir, a.name, plots=not a.no_plots, open_browser=not a.no_open)
+    df_list, key_list = load_frames()
+    frames = None
+    if not a.all:
+        from frame_filter import keep_frames, max_bar_table
+        frames = keep_frames(table=max_bar_table(df_list, key_list))
+    run_report(a.marks_dir, a.name, df_list, key_list, plots=not a.no_plots,
+               open_browser=not a.no_open, frames=frames)
 
 
 if __name__ == '__main__':

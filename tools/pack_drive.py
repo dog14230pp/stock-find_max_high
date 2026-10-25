@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 INCLUDE = ['data', 'marks', 'reports', 'analysis']
 SKIP_DIRS = [ROOT / 'analysis' / '2026-10-21_type1_ratio' / 'frames']   # 舊的合併版，已被 sec/、min/ 取代
+# analysis/ 只打包不進 git 的輸出（同 .gitignore）；程式走 git，避免解壓縮「取代」時用舊程式蓋掉 git pull 的新程式
+ANALYSIS_SUFFIXES = {'.csv', '.png', '.html'}
 
 
 def main():
@@ -23,6 +25,8 @@ def main():
                 continue
             for p in sorted((ROOT / top).rglob('*')):
                 if p.is_dir() or any(d in p.parents for d in SKIP_DIRS):
+                    continue
+                if top == 'analysis' and p.suffix.lower() not in ANALYSIS_SUFFIXES:
                     continue
                 z.write(p, p.relative_to(ROOT).as_posix())
                 n += 1

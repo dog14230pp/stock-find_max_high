@@ -3,10 +3,14 @@
 .tmp/
 __pycache__/
 *.pyc
-.claude/
+# .claude/ 只有 settings.json（禁止刪檔）和 skills/（實驗前先說明等規則）進 git，跨電腦共用；其他是個人 / 本機設定
+.claude/*
+!.claude/settings.json
+!.claude/skills/
 
 # 打包給 Google Drive 的壓縮檔
 _transfer/
+stock_drive_*.zip
 
 # 大檔 / 可重新產生的輸出：放 Google Drive，不進 git
 data/
@@ -15,3 +19,6 @@ reports/
 analysis/**/*.csv
 analysis/**/*.png
 analysis/**/*.html
+
+# 論文 PDF 有版權，不進 git；下載網址記在 papers/README.md
+papers/**/*.pdf

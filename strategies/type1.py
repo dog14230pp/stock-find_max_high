@@ -1,6 +1,6 @@
 """策略 type1：對每個 frame 算出標記時間，寫成 marks/type1/df_XXX.csv。
 
-執行（在 D:\\stock）：
+執行（在專案根目錄）：
     python strategies/type1.py
     python lib/backtest_report.py marks/type1
 """

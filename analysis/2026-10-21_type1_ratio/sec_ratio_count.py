@@ -4,7 +4,7 @@
 輸入：sec/、min/df_XXX.csv（make.py 產生）
 輸出（與本檔同資料夾）：
     sec_ratio_count.csv   每列 = 一個 frame 的一分鐘
-        df_idx, minute, close（該分鐘收盤價）, high（該分鐘最高價）, n_sec（有成交的秒數）, volume（該分鐘成交量）, type1_ratio（該分鐘）,
+        df_idx, minute, open（該分鐘開盤價）, close（該分鐘收盤價）, high（該分鐘最高價）, n_sec（有成交的秒數）, volume（該分鐘成交量）, type1_ratio（該分鐘）,
         ge_0.7, vol_ge_0.7, ge_0.8, vol_ge_0.8, ge_0.9, vol_ge_0.9,
         vol_share_ge_0.9（= vol_ge_0.9 / volume）,
         grad（梯度 = 這分鐘 type1_ratio − 上一分鐘）,
@@ -13,7 +13,7 @@
     sec_ratio_corr.csv    每列 = 一個 frame：該 frame 內每分鐘 volume vs type1_ratio 的 Pearson / Spearman
     sec_ratio_count.html  報告，用瀏覽器打開
 
-執行（在 D:\\stock）：python analysis/2026-10-21_type1_ratio/sec_ratio_count.py
+執行（在專案根目錄）：python analysis/2026-10-21_type1_ratio/sec_ratio_count.py
 """
 import html
 import json
@@ -31,7 +31,7 @@ BETA = 0.1           # 動量係數（同 NN 的 momentum β）
 def count_frame(i):
     s = pd.read_csv(HERE / 'sec' / f'df_{i:03d}.csv')
     m = pd.read_csv(HERE / 'min' / f'df_{i:03d}.csv').set_index('minute')
-    out = pd.DataFrame({'close': m['close'], 'high': m['high'], 'n_sec': s.groupby('minute').size(),
+    out = pd.DataFrame({'open': m['open'], 'close': m['close'], 'high': m['high'], 'n_sec': s.groupby('minute').size(),
                         'volume': m['volume'], 'type1_ratio': m['type1_ratio']})
     for th in THRESHOLDS:
         hit = s['type1_ratio'] >= th
@@ -150,10 +150,11 @@ def build_html(res, key_list, per, fmax):
             'max_price': f'{fmax.loc[i, "max_price"]:,.0f}',
             'label': f'{key_list[i][0]:%Y-%m-%d %H:%M} ~ {key_list[i][1]:%H:%M}',
             'pearson': f'{pc.loc[i, "pearson"]:.2f}', 'spearman': f'{pc.loc[i, "spearman"]:.2f}',
-            'rows': [[r[0][11:16], f'{r[1]:,.0f}', f'{r[2]:,.0f}', int(r[3]), f'{int(r[4]):,}', f'{r[5]:.2f}']
-                     + [int(v) for v in r[6:-3]]
+            'rows': [[r[0][11:16], f'{r[1]:,.0f}', f'{r[2]:,.0f}', f'{r[3]:,.0f}', int(r[4]), f'{int(r[5]):,}',
+                      f'{r[6]:.2f}']
+                     + [int(v) for v in r[7:-3]]
                      + [f'{r[-3] * 100:.1f}%', f'{r[-2]:+.3f}', f'{r[-1]:+.3f}']
-                     for r in g[['minute', 'close', 'high', 'n_sec', 'volume', 'type1_ratio'] + th_cols
+                     for r in g[['minute', 'open', 'close', 'high', 'n_sec', 'volume', 'type1_ratio'] + th_cols
                                 + ['vol_share_ge_0.9', 'grad', 'velocity']].itertuples(index=False)],
         })
     th_head = ''.join(f'<th>≥ {th} 秒數</th><th>≥ {th} 成交量</th>' for th in THRESHOLDS)
@@ -181,7 +182,7 @@ def build_html(res, key_list, per, fmax):
         '<h2 id="frame-sec">每個 frame 的每分鐘明細</h2>'
         '<p class="sub">標色那一列 = 該 frame 最高價（第一次出現）所在的分鐘。</p>'
         '<p class="sub"><select id="frame"></select>　<span id="info"></span></p>'
-        '<div class="card scroll"><table><thead><tr><th>分鐘</th><th>收盤價</th><th>最高價</th>'
+        '<div class="card scroll"><table><thead><tr><th>分鐘</th><th>開盤價</th><th>收盤價</th><th>最高價</th>'
         '<th>有成交的秒數</th><th>成交量</th>'
         f'<th>type1_ratio</th>{th_head}<th>≥ 0.9 成交量佔比</th><th>梯度 Δratio</th><th>速度</th></tr></thead><tbody id="rows"></tbody></table></div></main>'
     )
