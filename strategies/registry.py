@@ -34,9 +34,9 @@ def price_vol_corr(mb, n=10, price='open'):
 
 
 def vol_rise(n=5, mult=2.0, ratio_min=0.5, rise=3, new_high=0, wick_min=0.0, wick_body_min=0.0,
-             vol_base='mean', temp=1.0, corr_min=None, corr_n=10, corr_close_min=None):
+             vol_base='mean', temp=1.0, corr_min=None, corr_n=10, corr_close_min=None, lower_lt_upper=False):
     """量放大 + 外盤比例（+ close 連漲 rise 次）（+ 創前 new_high 根新高）（+ 上影線 >= wick_min）
-    （+ 上影線 >= wick_body_min × 實體）（+ corr(Open, Volume, corr_n) >= corr_min）。
+    （+ 上影線 >= wick_body_min × 實體）（+ corr(Open, Volume, corr_n) >= corr_min）（+ 下影線 < 上影線）。
 
     vol_base：量的基準。'mean' = 前 n 根平均；'softmax' = 前 n 根 softmax 加權平均（見 softmax_base，溫度 temp）；
               'none' = 不看量（不用 n、mult）。
@@ -45,6 +45,7 @@ def vol_rise(n=5, mult=2.0, ratio_min=0.5, rise=3, new_high=0, wick_min=0.0, wic
     wick_body_min：上影線 >= wick_body_min × |close − open|；十字線（實體 = 0）一定符合。
     corr_min：corr(Open, Volume, corr_n) 的下限（見 price_vol_corr）；None = 不看。
     corr_close_min：corr(Close, Volume, corr_n) 的下限；None = 不看。
+    lower_lt_upper：下影線（min(open, close) − low）< 上影線（high − max(open, close)）；一樣長不算。
     """
     def mask(mb):
         if vol_base in ('softmax', 'none'):
@@ -68,6 +69,8 @@ def vol_rise(n=5, mult=2.0, ratio_min=0.5, rise=3, new_high=0, wick_min=0.0, wic
         if wick_body_min:
             wick = mb['high'] - mb[['open', 'close']].max(axis=1)
             ok &= wick >= wick_body_min * (mb['close'] - mb['open']).abs()
+        if lower_lt_upper:
+            ok &= mb[['open', 'close']].min(axis=1) - mb['low'] < mb['high'] - mb[['open', 'close']].max(axis=1)
         return ok
     return mask
 
@@ -137,5 +140,19 @@ STRATEGIES = {
                 '上影線 ≥ 整根長度的 15%、corr(Close, Volume, 10) ≥ 0.2',
         'mask': vol_rise(n=5, mult=1.2, ratio_min=0.0, rise=0, new_high=60, wick_min=0.15, wick_body_min=0.0,
                          vol_base='softmax', temp=1.0, corr_n=10, corr_close_min=0.2),
+    },
+    'S11': {
+        'name': 'S8_alpha 拿掉 上影線 ≥ 0.8 × 實體（From S8_alpha）',
+        'desc': '5 個條件：成交量 > 1.2 × 前 5 根 softmax 加權平均（溫度 1）、type1_ratio ≥ 0.5、'
+                'high ≥ 前 60 根最高價、上影線 ≥ 整根長度的 15%、corr(Close, Volume, 10) ≥ 0.2',
+        'mask': vol_rise(n=5, mult=1.2, ratio_min=0.5, rise=0, new_high=60, wick_min=0.15, wick_body_min=0.0,
+                         vol_base='softmax', temp=1.0, corr_n=10, corr_close_min=0.2),
+    },
+    'S12': {
+        'name': 'S11 + 下影線 < 上影線（From S11）',
+        'desc': '同 S11，再加：下影線（min(open, close) − low）< 上影線（high − max(open, close)），'
+                '下影線 ≥ 上影線就不標記',
+        'mask': vol_rise(n=5, mult=1.2, ratio_min=0.5, rise=0, new_high=60, wick_min=0.15, wick_body_min=0.0,
+                         vol_base='softmax', temp=1.0, corr_n=10, corr_close_min=0.2, lower_lt_upper=True),
     },
 }
